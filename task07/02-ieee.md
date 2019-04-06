@@ -41,5 +41,5 @@
 
 ```
 def get_one(n, m):
-    return [0] + [0] * n + [0] * m
+    return [0] + [0] + [1] * (n - 1) + [0] * m
 ```
