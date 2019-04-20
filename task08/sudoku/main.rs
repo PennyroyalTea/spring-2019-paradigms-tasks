@@ -184,7 +184,9 @@ fn find_solution_parallel(mut f: Field) -> Option<Field> {
             tx.send(find_solution(&mut f_clone)).expect("channel will be there waiting for the pool");
         });
     }
-    rx.recv().unwrap()
+    let mut iter = rx.into_iter();
+    let res = iter.find_map(|option| option);
+    res
 }
 
 /// Юнит-тест, проверяющий, что `find_solution()` находит лексикографически минимальное решение на пустом поле.
