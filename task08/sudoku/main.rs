@@ -4,6 +4,10 @@
 //! Чтобы вам было легче ориентироваться, мы постарались прокомментировать весь код, насколько это возможно.
 //! Если у вас остаются вопросы или непонятные места — пишите нам, поможем разобраться.
 
+extern crate threadpool;
+
+use threadpool::ThreadPool;
+use std::sync::mpsc::channel;
 // Намек компилятору, что мы также хотим использовать наш модуль из файла `field.rs`.
 mod field;
 
@@ -168,8 +172,19 @@ fn find_solution(f: &mut Field) -> Option<Field> {
 /// Если хотя бы одно решение `s` существует, возвращает `Some(s)`,
 /// в противном случае возвращает `None`.
 fn find_solution_parallel(mut f: Field) -> Option<Field> {
-    // TODO: вам требуется изменить эту функцию.
-    find_solution(&mut f)
+    let n_workers = 4;
+    let n_jobs = 8;
+    let pool = ThreadPool::new(n_workers);
+
+    let (tx, rx) = channel();
+    for _ in 0..n_jobs {
+        let tx = tx.clone();
+        let mut f_clone = f.clone();
+        pool.execute(move|| {
+            tx.send(find_solution(&mut f_clone)).expect("channel will be there waiting for the pool");
+        });
+    }
+    rx.recv().unwrap()
 }
 
 /// Юнит-тест, проверяющий, что `find_solution()` находит лексикографически минимальное решение на пустом поле.
