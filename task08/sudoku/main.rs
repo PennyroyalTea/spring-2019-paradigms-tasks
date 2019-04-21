@@ -8,6 +8,8 @@ extern crate threadpool;
 
 use threadpool::ThreadPool;
 use std::sync::mpsc::channel;
+use std::sync::mpsc::Sender;
+
 // Намек компилятору, что мы также хотим использовать наш модуль из файла `field.rs`.
 mod field;
 
@@ -173,20 +175,49 @@ fn find_solution(f: &mut Field) -> Option<Field> {
 /// в противном случае возвращает `None`.
 fn find_solution_parallel(mut f: Field) -> Option<Field> {
     let n_workers = 4;
-    let n_jobs = 8;
     let pool = ThreadPool::new(n_workers);
 
     let (tx, rx) = channel();
-    for _ in 0..n_jobs {
-        let tx = tx.clone();
-        let mut f_clone = f.clone();
-        pool.execute(move|| {
-            tx.send(find_solution(&mut f_clone)).expect("channel will be there waiting for the pool");
-        });
-    }
+    spawn_tasks(&pool, &mut f, tx, 2);
     let mut iter = rx.into_iter();
     let res = iter.find_map(|option| option);
     res
+}
+
+fn spawn_tasks(pool: &ThreadPool, mut f: &mut Field, tx: Sender<Option<Field>>, spawn_depth: i32) {
+    if  spawn_depth == 1 {
+        try_extend_field(
+            &mut f,
+
+            |f_solved| -> Field {
+                tx.clone().send(Some(f_solved.clone())).unwrap();
+                f_solved.clone()
+            },
+
+            |f_next: &mut Field| -> Option<Field> {
+                let tx_copy = tx.clone();
+                let mut f_next_clone = f_next.clone();
+
+                pool.execute(move || {
+                    tx_copy.send(find_solution(&mut f_next_clone)).unwrap();
+                });
+                None
+            }
+        );
+    } else {
+        try_extend_field(
+            &mut f,
+
+            |f_solved| -> Field {
+                f_solved.clone()
+            },
+
+            |f_next: &mut Field| -> Option<Field> {
+                spawn_tasks(&pool, &mut f_next.clone(), tx.clone(), spawn_depth - 1);
+                None
+            }
+        );
+    }
 }
 
 /// Юнит-тест, проверяющий, что `find_solution()` находит лексикографически минимальное решение на пустом поле.
