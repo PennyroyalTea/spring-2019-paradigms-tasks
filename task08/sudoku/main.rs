@@ -184,6 +184,8 @@ fn find_solution_parallel(mut f: Field) -> Option<Field> {
     res
 }
 
+// Inspired by pull requests of my mates. Special thanks to Aleksandrina and Bosov
+
 fn spawn_tasks(pool: &ThreadPool, mut f: &mut Field, tx: Sender<Option<Field>>, spawn_depth: i32) {
     if  spawn_depth == 1 {
         try_extend_field(
