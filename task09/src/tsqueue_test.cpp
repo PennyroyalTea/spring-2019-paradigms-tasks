@@ -41,20 +41,32 @@ TEST_CASE("ThreadsafeQueue multithreaded ping-pong") {
     const int PING_PONGS = 100;
 
     auto pinger = [](void *_qs) -> void * {
+        int val = 0;
         ThreadsafeQueue *qs = static_cast<ThreadsafeQueue *>(_qs);
-        // TODO
-        static_cast<void>(qs);  // Используем переменную как-нибудь.
-        static_cast<void>(PING_PONGS);  // Используем переменную как-нибудь.
+        for (auto it = 0; it < PING_PONGS; ++it) {
+            int expected = val + 1;
+            threadsafe_queue_push(qs, &val);
+            CHECK(threadsafe_queue_wait_and_pop(&qs[1]) == &val);
+            CHECK(val == expected);
+        }
         return nullptr;
     };
 
-    // TODO
+    auto ponger = [](void *_qs) -> void * {
+        ThreadsafeQueue *qs = static_cast<ThreadsafeQueue *>(_qs);
+        for (auto it = 0; it < PING_PONGS; ++it) {
+            int* val = static_cast<int*>(threadsafe_queue_wait_and_pop(qs));
+            ++(*val);
+            threadsafe_queue_push(&(qs[1]), val);
+        }
+        return nullptr;
+    };
 
     pthread_t t1, t2;
     REQUIRE(pthread_create(&t1, nullptr, pinger, qs) == 0);
-    // TODO
-    static_cast<void>(t2);
+    REQUIRE(pthread_create(&t2, nullptr, ponger, qs) == 0);
     REQUIRE(pthread_join(t1, nullptr) == 0);
+    REQUIRE(pthread_join(t2, nullptr) == 0);
 
     threadsafe_queue_destroy(&qs[1]);
     threadsafe_queue_destroy(&qs[0]);
