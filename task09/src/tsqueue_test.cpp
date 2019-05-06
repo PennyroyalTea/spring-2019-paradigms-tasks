@@ -1,4 +1,5 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+
 #include "tsqueue.h"
 #include "doctest.h"
 
@@ -55,7 +56,7 @@ TEST_CASE("ThreadsafeQueue multithreaded ping-pong") {
     auto ponger = [](void *_qs) -> void * {
         ThreadsafeQueue *qs = static_cast<ThreadsafeQueue *>(_qs);
         for (auto it = 0; it < PING_PONGS; ++it) {
-            int* val = static_cast<int*>(threadsafe_queue_wait_and_pop(qs));
+            int *val = static_cast<int *>(threadsafe_queue_wait_and_pop(qs));
             ++(*val);
             threadsafe_queue_push(&(qs[1]), val);
         }
