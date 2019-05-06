@@ -3,11 +3,13 @@
 void threadsafe_queue_init(ThreadsafeQueue *q) {
     pthread_mutex_init(&(q->m), NULL);
     pthread_cond_init(&(q->cond), NULL);
+    queue_init(&(q->q));
 }
 
 void threadsafe_queue_destroy(ThreadsafeQueue *q) {
     pthread_cond_destroy(&(q->cond));
     pthread_mutex_destroy(&(q->m));
+    queue_destroy(&(q->q));
 }
 
 void threadsafe_queue_push(ThreadsafeQueue *q, void *data) {
