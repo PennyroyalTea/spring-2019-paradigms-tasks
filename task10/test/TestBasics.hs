@@ -16,7 +16,7 @@ testsBasics = testGroup "Unit tests for Basics tasks"
     , testCase "tail' works on non-empty list too" $
         tail' [1,2,3] @?= [2,3]
     , testCase "tail' works on infinite list too" $
-        (tail' [1,2..]) !! 100 @?= 102
+        take' 100 (tail' [56..])  @?= take' 100 ([57..])
 
     , testCase "take' takes 1 element from 3-element list" $
         take' 1 [1,2,3] @?= [1]
