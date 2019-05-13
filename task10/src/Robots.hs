@@ -93,7 +93,6 @@ fightIteration :: Bool -> Int -> Robot -> Robot -> Robot
 fightIteration _ 0 attacker defender
     | getHealth defender > getHealth attacker = defender
     | otherwise                               = attacker
-
 fightIteration True n attacker defender = fightIteration False (n - 1) attacker $ fight attacker defender
 fightIteration False n attacker defender = fightIteration True (n - 1) (fight defender attacker) defender
 
