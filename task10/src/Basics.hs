@@ -10,8 +10,8 @@ head' (x:_) = x
 
 -- 2. tail' возвращает список без первого элемента, для пустого - пустой
 tail' :: [a] -> [a]
+tail' []     = []
 tail' (_:xs) = xs
-tail' _      = []
 
 -- 3. take' возвращает первые n >= 0 элементов исходного списка
 take' :: Int -> [a] -> [a]
@@ -21,8 +21,8 @@ take' n (x:xs) = x : take' (n - 1) xs
 -- 4. drop' возвращает список без первых n >= 0 элементов; если n больше длины
 -- списка, то пустой список.
 drop' :: Int -> [a] -> [a]
-drop' 0 xs = xs
-drop' n (_:xs) = drop' (n-1) xs 
+drop' 0 xs     = xs
+drop' n (_:xs) = drop' (n - 1) xs 
 drop' _ _ = []
 
 -- 5. filter' возвращает список из элементов, для которых f возвращает True
@@ -52,11 +52,9 @@ quickSort' :: Ord a => [a] -> [a]
 quickSort' [] = []
 quickSort' xs = 
     let 
-    pivot = xs !! (length xs `div` 2) 
-    left = filter' (<pivot) xs
-    mid = filter' (==pivot) xs
-    right = filter' (>pivot) xs
-    in concat' (quickSort' left) $ concat' mid (quickSort' right)
-
-
-
+        pivot = xs !! (length xs `div` 2) 
+        left  = filter' (<pivot) xs
+        mid   = filter' (==pivot) xs
+        right = filter' (>pivot) xs
+    in 
+        concat' (quickSort' left) $ concat' mid (quickSort' right)
