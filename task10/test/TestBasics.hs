@@ -37,6 +37,8 @@ testsBasics = testGroup "Unit tests for Basics tasks"
         foldl'' (+) 0 [1, 2, 3] @?= 6
     , testCase "foldl'' assymetric" $
         foldl'' (^) 2 [1, 2, 3, 4] @?= ((2 ^ 2) ^ 3) ^ 4
+    , testCase "foldl'' super assymetric " $
+        foldl'' (++) "xxx" ["a", "b", "c", "d"] @?= "xxxabcd"
 
     , testCase "concat' works on finite lists as expected" $
         concat' [1,2,3] [4,5,6] @?= [1..6]
