@@ -40,7 +40,7 @@ class Map t where
     insert = insertWith const
 
     insertWith :: Ord k => (a -> a -> a) -> k -> a -> t k a -> t k a
-    insertWith f key value  = alter (maybe (Just value) (Just . f value)) key
+    insertWith f key value  = alter (Just . maybe (value) (f value)) key
 
     insertWithKey :: Ord k => (k -> a -> a -> a) -> k -> a -> t k a -> t k a
     insertWithKey f key = insertWith (f key) key
