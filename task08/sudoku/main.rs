@@ -4,22 +4,19 @@
 //! Чтобы вам было легче ориентироваться, мы постарались прокомментировать весь код, насколько это возможно.
 //! Если у вас остаются вопросы или непонятные места — пишите нам, поможем разобраться.
 
-#![deny(warnings)]
-extern crate threadpool;
-
-use threadpool::ThreadPool;
-use std::sync::mpsc::channel;
-use std::sync::mpsc::Sender;
-
 // Все предупреждения в этом crate являются ошибками.
-
+#![deny(warnings)]
 
 // Намек компилятору, что мы также хотим использовать наш модуль из файла `field.rs`.
 mod field;
+extern crate threadpool;
 
 // Чтобы не писать `field::Cell:Empty`, можно "заимпортировать" нужные вещи из модуля.
 use field::Cell::*;
 use field::{parse_field, Field, N};
+
+use std::sync::mpsc;
+use threadpool::ThreadPool;
 
 /// Эта функция выполняет один шаг перебора в поисках решения головоломки.
 /// Она перебирает значение какой-нибудь пустой клетки на поле всеми непротиворечивыми способами.
@@ -178,50 +175,32 @@ fn find_solution(f: &mut Field) -> Option<Field> {
 /// Если хотя бы одно решение `s` существует, возвращает `Some(s)`,
 /// в противном случае возвращает `None`.
 fn find_solution_parallel(mut f: Field) -> Option<Field> {
-    let n_workers = 4;
-    let pool = ThreadPool::new(n_workers);
-
-    let (tx, rx) = channel();
-    spawn_tasks(&pool, &mut f, tx, 2);
-    let mut iter = rx.into_iter();
-    let res = iter.find_map(|option| option);
-    res
+    const SPAWN_DEPTH: i32 = 2;
+    let (tx, rx) = mpsc::channel();
+    let pool = threadpool::ThreadPool::new(8);
+    spawn_tasks(&pool, &mut f, &tx, SPAWN_DEPTH);
+    std::mem::drop(tx);
+    rx.into_iter().find_map(|x| x)
 }
 
-// Inspired by pull requests of my mates. Special thanks to Aleksandrina and Bosov
-
-fn spawn_tasks(pool: &ThreadPool, mut f: &mut Field, tx: Sender<Option<Field>>, spawn_depth: i32) {
-    if  spawn_depth == 1 {
-        try_extend_field(
-            &mut f,
-
-            |f_solved| -> Field {
-                tx.clone().send(Some(f_solved.clone())).unwrap();
-                f_solved.clone()
-            },
-
-            |f_next: &mut Field| -> Option<Field> {
-                let tx_copy = tx.clone();
-                let mut f_next_clone = f_next.clone();
-
-                pool.execute(move || {
-                    tx_copy.send(find_solution(&mut f_next_clone)).unwrap();
-                });
-                None
-            }
-        );
+fn spawn_tasks(pool: &ThreadPool, f: &mut Field, tx: &mpsc::Sender<Option<Field>>, depth: i32) {
+    assert!(depth >= 0);
+    if depth == 0 {
+        let tx = tx.clone();
+        let mut f = f.clone();
+        pool.execute(move || {
+            tx.send(find_solution(&mut f)).unwrap_or(());
+        });
     } else {
         try_extend_field(
-            &mut f,
-
-            |f_solved| -> Field {
-                f_solved.clone()
+            f,
+            |f| {
+                tx.send(Some(f.clone())).unwrap_or(());
             },
-
-            |f_next: &mut Field| -> Option<Field> {
-                spawn_tasks(&pool, &mut f_next.clone(), tx.clone(), spawn_depth - 1);
+            |f| {
+                spawn_tasks(&pool, f, &tx, depth - 1);
                 None
-            }
+            },
         );
     }
 }
