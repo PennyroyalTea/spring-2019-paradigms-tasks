@@ -49,16 +49,14 @@ class Map t where
     delete = alter $ const Nothing
 
     adjust :: Ord k => (a -> a) -> k -> t k a -> t k a
-    adjust f = alter $ maybe Nothing (Just . f)
-    
+    adjust f = alter $ fmap f
 
     adjustWithKey :: Ord k => (k -> a -> a) -> k -> t k a -> t k a
     adjustWithKey f key = adjust (f key) key
 
     update :: Ord k => (a -> Maybe a) -> k -> t k a -> t k a
-    update f = alter $maybe Nothing f
+    update f = alter $ maybe Nothing f
   
-
     updateWithKey :: Ord k => (k -> a -> Maybe a) -> k -> t k a -> t k a
     updateWithKey f key = update (f key) key
 
