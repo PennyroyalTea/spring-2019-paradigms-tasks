@@ -42,22 +42,21 @@ class Map t where
     insertWith :: Ord k => (a -> a -> a) -> k -> a -> t k a -> t k a
     insertWith f key value  = alter (maybe (Just value) (Just . f value)) key
 
-
     insertWithKey :: Ord k => (k -> a -> a -> a) -> k -> a -> t k a -> t k a
     insertWithKey f key = insertWith (f key) key
 
     delete :: Ord k => k -> t k a -> t k a
-    delete = alter (const Nothing)
+    delete = alter $ const Nothing
 
     adjust :: Ord k => (a -> a) -> k -> t k a -> t k a
-    adjust f = alter (maybe Nothing (Just . f))
+    adjust f = alter $ maybe Nothing (Just . f)
     
 
     adjustWithKey :: Ord k => (k -> a -> a) -> k -> t k a -> t k a
     adjustWithKey f key = adjust (f key) key
 
     update :: Ord k => (a -> Maybe a) -> k -> t k a -> t k a
-    update f = alter (maybe Nothing f)
+    update f = alter $maybe Nothing f
   
 
     updateWithKey :: Ord k => (k -> a -> Maybe a) -> k -> t k a -> t k a

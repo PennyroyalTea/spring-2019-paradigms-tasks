@@ -48,9 +48,9 @@ instance Map NaiveTree where
     empty = Nil
 
     singleton k a = Node k a Nil Nil
-
-    toAscList (Node key value left right) = toAscList left ++ [(key, value)] ++ toAscList right
+    
     toAscList Nil                         = []
+    toAscList (Node key value left right) = toAscList left ++ [(key, value)] ++ toAscList right
 
     alter f key Nil = maybe empty (singleton key) $ f Nothing
     alter f key (Node k a l r)
