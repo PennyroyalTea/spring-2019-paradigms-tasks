@@ -7,4 +7,4 @@
 SELECT Country.Name, SUM(CASE WHEN City.Population >= 1000000 THEN 1 ELSE 0 END)
 FROM Country 
 LEFT JOIN City ON Country.Code = City.CountryCode
-GROUP BY Country.Code
+GROUP BY Country.Code;
